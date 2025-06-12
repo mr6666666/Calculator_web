@@ -1,0 +1,160 @@
+<!DOCTYPE html><html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ماشین حساب حرفه‌ای</title>
+    <style>
+        :root {
+            --bg-color: #1e1e2f;
+            --display-bg: #2e2e3e;
+            --btn-bg: #3e3e5e;
+            --btn-hover: #5e5e8e;
+            --operator-bg: #ff9f43;
+            --operator-hover: #ffc048;
+            --equal-bg: #20bf6b;
+            --equal-hover: #38ef7d;
+            --clear-bg: #ee5253;
+            --clear-hover: #ff6b6b;
+            --text-color: #fff;
+        }
+        [data-theme="light"] {
+            --bg-color: #f0f0f0;
+            --display-bg: #fff;
+            --btn-bg: #e0e0e0;
+            --btn-hover: #d0d0d0;
+            --operator-bg: #ffa726;
+            --operator-hover: #ffb74d;
+            --equal-bg: #66bb6a;
+            --equal-hover: #81c784;
+            --clear-bg: #e57373;
+            --clear-hover: #ef5350;
+            --text-color: #000;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            font-family: 'Tahoma', sans-serif;
+        }
+        .calculator {
+            background: var(--bg-color);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            max-width: 420px;
+            width: 100%;
+            position: relative;
+        }
+        .toggle-container {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .theme-toggle, .pro-toggle {
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--text-color);
+            background: none;
+            border: none;
+        }
+        .display {
+            background: var(--display-bg);
+            border-radius: 10px;
+            padding: 20px;
+            font-size: 2rem;
+            color: var(--text-color);
+            text-align: right;
+            word-wrap: break-word;
+            min-height: 60px;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 15px;
+            margin-top: 20px;
+        }
+        .button {
+            background: var(--btn-bg);
+            border: none;
+            border-radius: 10px;
+            padding: 20px;
+            font-size: 1.2rem;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .button:hover { background: var(--btn-hover); transform: translateY(-3px); }
+        .button.operator { background: var(--operator-bg); color: var(--bg-color); }
+        .button.operator:hover { background: var(--operator-hover); }
+        .button.equal { background: var(--equal-bg); grid-column: span 2; }
+        .button.equal:hover { background: var(--equal-hover); }
+        .button.clear { background: var(--clear-bg); grid-column: span 2; }
+        .button.clear:hover { background: var(--clear-hover); }
+    </style>
+</head>
+<body data-theme="dark">
+    <div class="calculator">
+        <div class="toggle-container">
+            <button class="theme-toggle" onclick="toggleTheme()">🌙/☀️</button>
+            <button class="pro-toggle" onclick="togglePro()">🛠️ حالت حرفه‌ای</button>
+        </div>
+        <div id="display" class="display">0</div>
+        <div id="buttons" class="buttons">
+            <!-- پایه -->
+            <button class="button clear" onclick="clearDisplay()">C</button>
+            <button class="button operator" onclick="appendOperator('(')">(</button>
+            <button class="button operator" onclick="appendOperator(')')">)</button>
+            <button class="button operator" onclick="appendOperator('/')">÷</button>
+            <button class="button" onclick="appendNumber('7')">7</button>
+            <button class="button" onclick="appendNumber('8')">8</button>
+            <button class="button" onclick="appendNumber('9')">9</button>
+            <button class="button operator" onclick="appendOperator('*')">×</button>
+            <button class="button" onclick="appendNumber('4')">4</button>
+            <button class="button" onclick="appendNumber('5')">5</button>
+            <button class="button" onclick="appendNumber('6')">6</button>
+            <button class="button operator" onclick="appendOperator('-')">−</button>
+            <button class="button" onclick="appendNumber('1')">1</button>
+            <button class="button" onclick="appendNumber('2')">2</button>
+            <button class="button" onclick="appendNumber('3')">3</button>
+            <button class="button operator" onclick="appendOperator('+')">+</button>
+            <button class="button" onclick="appendNumber('0')">0</button>
+            <button class="button" onclick="appendNumber('.')">.</button>
+            <button class="button operator" onclick="appendOperator('^')">^</button>
+            <button class="button equal" onclick="calculateResult()">=</button>
+            <!-- توابع پایه -->
+            <button class="button operator" onclick="appendOperator('sin(')">sin</button>
+            <button class="button operator" onclick="appendOperator('cos(')">cos</button>
+            <button class="button operator" onclick="appendOperator('tan(')">tan</button>
+            <button class="button operator" onclick="appendOperator('log(')">log</button>
+            <button class="button operator" onclick="appendOperator('ln(')">ln</button>
+        </div>
+    </div>
+    <script>
+        let expression = ''; let proMode = false;
+        const display = document.getElementById('display');
+        const buttonsDiv = document.getElementById('buttons');
+        const proFunctions = [
+            'asin(', 'acos(', 'atan(', 'sqrt(', 'cbrt(', 'exp(', 'abs(',
+            'floor(', 'ceil(', 'round(', 'max(', 'min(', 'pow(', 'sign(',
+            'random(', 'sinh(', 'cosh(', 'tanh(', 'log2(', 'log10('
+        ];
+        const proButtons = proFunctions.map(fn => {
+            const btn = document.createElement('button');
+            btn.className = 'button operator';
+            btn.innerText = fn.replace('(', '');
+            btn.onclick = () => appendOperator(fn);
+            return btn;
+        });
+        function appendNumber(number) { if (expression === '' && number==='0') return; expression+=number; updateDisplay(); }
+        function appendOperator(operator) { expression+=operator; updateDisplay(); }
+        function clearDisplay() { expression=''; display.innerText='0'; }
+        function updateDisplay() { display.innerText=expression; }
+        function calculateResult() {
+            try {
+                let exp = expression.replace(/\^/g,'**')
+                    .replace(/sin
